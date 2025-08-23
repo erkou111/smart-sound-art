@@ -19,4 +19,20 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  define: {
+    global: 'globalThis',
+  },
+  optimizeDeps: {
+    exclude: ['rhino3dm'],
+    esbuildOptions: {
+      define: {
+        global: 'globalThis'
+      }
+    }
+  },
+  build: {
+    rollupOptions: {
+      external: ['ws', 'fs', 'path', 'crypto']
+    }
+  }
 }));
