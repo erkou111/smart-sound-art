@@ -11,16 +11,16 @@ interface ColorPickerProps {
   ambientEnabled: boolean;
 }
 
-const presetColors = [
-  { name: "经典蓝", color: "#4f46e5", desc: "冷静沉稳" },
-  { name: "活力紫", color: "#7c3aed", desc: "神秘优雅" },
-  { name: "青春绿", color: "#10b981", desc: "清新自然" },
-  { name: "热情红", color: "#ef4444", desc: "热烈奔放" },
-  { name: "温暖橙", color: "#f97316", desc: "温馨活泼" },
-  { name: "天空青", color: "#06b6d4", desc: "清澈明朗" },
-  { name: "薄荷绿", color: "#34d399", desc: "清新淡雅" },
-  { name: "樱花粉", color: "#ec4899", desc: "浪漫温柔" }
-];
+// 生成颜色条的颜色值
+const generateColorBar = () => {
+  const colors = [];
+  for (let i = 0; i <= 360; i += 10) {
+    colors.push(`hsl(${i}, 70%, 60%)`);
+  }
+  return colors;
+};
+
+const colorBarColors = generateColorBar();
 
 const lightModes = [
   { id: "static", name: "静态模式", icon: Palette, desc: "持续显示选定颜色" },
@@ -37,26 +37,25 @@ export const ColorPicker = ({ selectedColor, onColorChange, ambientEnabled }: Co
       <div>
         <h3 className="text-lg font-semibold mb-4">色彩控制</h3>
         
-        {/* Preset Colors */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-          {presetColors.map((preset) => (
-            <Card 
-              key={preset.color}
-              className={`p-3 cursor-pointer transition-all border-2 ${
-                selectedColor === preset.color 
-                  ? 'border-primary shadow-glow' 
-                  : 'border-border hover:border-primary/50'
-              }`}
-              onClick={() => onColorChange(preset.color)}
-            >
-              <div 
-                className="w-full h-12 rounded-lg mb-2 shadow-inner"
-                style={{ backgroundColor: preset.color }}
-              />
-              <h4 className="font-medium text-sm">{preset.name}</h4>
-              <p className="text-xs text-muted-foreground">{preset.desc}</p>
-            </Card>
-          ))}
+        {/* Color Bar */}
+        <div className="mb-6">
+          <label className="text-sm font-medium mb-3 block">颜色选择</label>
+          <div className="relative">
+            <div className="flex h-8 rounded-lg overflow-hidden border border-border">
+              {colorBarColors.map((color, index) => (
+                <div
+                  key={index}
+                  className="flex-1 cursor-pointer hover:scale-105 transition-transform"
+                  style={{ backgroundColor: color }}
+                  onClick={() => onColorChange(color)}
+                  title={color}
+                />
+              ))}
+            </div>
+            <div className="mt-2 text-xs text-muted-foreground text-center">
+              点击颜色条选择颜色
+            </div>
+          </div>
         </div>
 
         {/* Custom Color */}
