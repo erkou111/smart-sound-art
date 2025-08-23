@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OBJ Model Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #1a1a1a;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        #container {
+            width: 400px;
+            height: 400px;
+            border: 1px solid #333;
+            margin: 20px 0;
+        }
+        #info {
+            margin-top: 20px;
+            padding: 10px;
+            background: #333;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>OBJ Model Loading Test</h1>
+    <div id="container"></div>
+    <div id="info">
+        <p>Status: <span id="status">Loading...</span></p>
+        <p>Details: <span id="details">Initializing...</span></p>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.179.1/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.179.1/examples/jsm/"
+        }
+    }
+    </script>
+    <script type="module">
+        import * as THREE from 'three';
+        import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
+
+        const container = document.getElementById('container');
+        const statusEl = document.getElementById('status');
+        const detailsEl = document.getElementById('details');
+
+        // 创建场景
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        
+        renderer.setSize(400, 400);
+        renderer.setClearColor(0x222222);
+        container.appendChild(renderer.domElement);
+
+        // 添加光源
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
+        
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        directionalLight.position.set(5, 5, 5);
+        scene.add(directionalLight);
+
+        // 设置相机位置
+        camera.position.set(0, 0, 5);
+
+        // 加载OBJ模型
+        const loader = new OBJLoader();
+        
+        statusEl.textContent = 'Loading OBJ file...';
+        detailsEl.textContent = 'Attempting to load /trytry.obj';
+        
+        loader.load(
+            '/trytry.obj',
+            // 成功回调
+            function (object) {
+                console.log('OBJ loaded successfully:', object);
+                statusEl.textContent = 'Success!';
+                detailsEl.textContent = `Loaded ${object.children.length} objects`;
+                
+                // 添加材质
+                object.traverse(function (child) {
+                    if (child instanceof THREE.Mesh) {
+                        child.material = new THREE.MeshStandardMaterial({
+                            color: 0x888888,
+                            metalness: 0.5,
+                            roughness: 0.5
+                        });
+                    }
+                });
+                
+                // 调整大小和位置
+                const box = new THREE.Box3().setFromObject(object);
+                const center = box.getCenter(new THREE.Vector3());
+                const size = box.getSize(new THREE.Vector3());
+                
+                object.position.sub(center);
+                
+                const maxDim = Math.max(size.x, size.y, size.z);
+                if (maxDim > 0) {
+                    const scale = 3 / maxDim;
+                    object.scale.setScalar(scale);
+                }
+                
+                scene.add(object);
+                
+                // 动画循环
+                function animate() {
+                    requestAnimationFrame(animate);
+                    object.rotation.y += 0.01;
+                    renderer.render(scene, camera);
+                }
+                animate();
+            },
+            // 进度回调
+            function (progress) {
+                const percent = (progress.loaded / progress.total * 100).toFixed(1);
+                detailsEl.textContent = `Loading: ${percent}%`;
+            },
+            // 错误回调
+            function (error) {
+                console.error('OBJ loading failed:', error);
+                statusEl.textContent = 'Failed!';
+                detailsEl.textContent = `Error: ${error.message || 'Unknown error'}`;
+            }
+        );
+    </script>
+</body>
+</html>
