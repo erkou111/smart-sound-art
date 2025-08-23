@@ -53,38 +53,14 @@ const Index = () => {
         </div>
       </header>
 
-      <main className="flex h-[calc(100vh-80px)]">
-        {/* Left Panel - Speaker Visualization */}
-        <div className="flex-1 flex flex-col p-6">
-          {/* Speaker Visual - Takes most space */}
-          <div className="flex-1 flex items-center justify-center">
-            <SpeakerVisualization 
-              color={selectedColor}
-              isConnected={isConnected}
-              ambientEnabled={ambientLightEnabled}
-              volume={volume[0]}
-              showOnlySpeaker={true}
-            />
-          </div>
+      <main className="container mx-auto px-6 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
-          {/* Audio Visualizer - Transparent background at bottom */}
-          <div className="h-32 flex items-center justify-center">
-            <SpeakerVisualization 
-              color={selectedColor}
-              isConnected={isConnected}
-              ambientEnabled={ambientLightEnabled}
-              volume={volume[0]}
-              showOnlyAudio={true}
-            />
-          </div>
-        </div>
-
-        {/* Right Panel - Controls (Scrollable, Semi-transparent) */}
-        <div className="w-96 bg-card/50 backdrop-blur-sm border-l border-border overflow-y-auto">
-          <div className="p-6 space-y-6">
+          {/* Left Panel - Controls */}
+          <div className="lg:col-span-2 space-y-6">
             
             {/* Main Control Card */}
-            <Card className="p-6 shadow-card bg-card/80 backdrop-blur-sm">
+            <Card className="p-6 shadow-card bg-gradient-ambient">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-lg font-semibold">主控制面板</h2>
                 <Button 
@@ -98,7 +74,7 @@ const Index = () => {
                 </Button>
               </div>
               
-              <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <label className="text-sm font-medium">音量</label>
@@ -132,7 +108,7 @@ const Index = () => {
             </Card>
 
             {/* Function Tabs */}
-            <Card className="shadow-card bg-card/80 backdrop-blur-sm">
+            <Card className="shadow-card">
               <Tabs defaultValue="colors" className="w-full">
                 <TabsList className="grid w-full grid-cols-4 bg-muted/50">
                   <TabsTrigger value="colors" className="gap-2">
@@ -180,6 +156,19 @@ const Index = () => {
                   <AIChat />
                 </TabsContent>
               </Tabs>
+            </Card>
+          </div>
+
+          {/* Right Panel - Speaker Visualization */}
+          <div className="space-y-6">
+            <Card className="p-6 shadow-card bg-gradient-ambient">
+              <h2 className="text-lg font-semibold mb-4">音箱状态</h2>
+              <SpeakerVisualization 
+                color={selectedColor}
+                isConnected={isConnected}
+                ambientEnabled={ambientLightEnabled}
+                volume={volume[0]}
+              />
             </Card>
           </div>
         </div>
