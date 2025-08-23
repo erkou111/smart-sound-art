@@ -37,12 +37,12 @@ export default function TraeModel() {
 
     // 加载 MTL 和 OBJ
     const mtlLoader = new MTLLoader();
-    mtlLoader.load('/assets/trytry.mtl', (materials) => {
+    mtlLoader.load('/assets/smart.mtl', (materials) => {
       materials.preload();
 
       const objLoader = new OBJLoader();
       objLoader.setMaterials(materials);
-      objLoader.load('/assets/trytry.obj', (object) => {
+      objLoader.load('/assets/smart.obj', (object) => {
         object.scale.set(0.01, 0.01, 0.01); // 缩小
         object.position.set(0, 0, 0);       // 放到原点
 
