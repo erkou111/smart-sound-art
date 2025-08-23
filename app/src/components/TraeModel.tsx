@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import * as THREE from "three";
-import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
-import { MTLLoader } from 'three/addons/loaders/MTLLoader.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 export default function TraeModel() {
   useEffect(() => {
@@ -35,28 +34,47 @@ export default function TraeModel() {
       side: THREE.DoubleSide
     });
 
-    // 加载 MTL 和 OBJ
-    const mtlLoader = new MTLLoader();
-    mtlLoader.load('/assets/smart.mtl', (materials) => {
-      materials.preload();
-
-      const objLoader = new OBJLoader();
-      objLoader.setMaterials(materials);
-      objLoader.load('/assets/smart.obj', (object) => {
+    // 加载 GLB
+    const gltfLoader = new GLTFLoader();
+    console.log('开始加载 jiuming.glb 文件...');
+    
+    gltfLoader.load(
+      '/assets/jiuming.glb',
+      // 成功回调
+      (gltf) => {
+        console.log('GLB文件加载成功:', gltf);
+        const object = gltf.scene;
         object.scale.set(0.01, 0.01, 0.01); // 缩小
         object.position.set(0, 0, 0);       // 放到原点
-
+        
         object.traverse((child) => {
           if (child instanceof THREE.Mesh) {
             child.geometry.computeVertexNormals();
             child.material.side = THREE.DoubleSide;
-            child.material.wireframe = false;  // 取消线框
           }
         });
-
+        
         scene.add(object);
-      });
-    });
+        console.log('GLB模型已添加到场景中');
+      },
+      // 进度回调
+      (progress) => {
+        console.log('加载进度:', (progress.loaded / progress.total * 100) + '%');
+      },
+      // 错误回调
+      (error) => {
+        console.error('GLB文件加载失败:', error);
+        console.error('错误详情:', error instanceof Error ? error.message : String(error));
+        
+        // 创建一个简单的立方体作为备用
+        const geometry = new THREE.BoxGeometry(1, 1, 1);
+        const material = new THREE.MeshPhongMaterial({ color: 0xff0000 });
+        const cube = new THREE.Mesh(geometry, material);
+        cube.position.set(0, 0, 0);
+        scene.add(cube);
+        console.log('已添加红色立方体作为备用模型');
+      }
+    );
 
     // 动画循环
     const animate = () => {
