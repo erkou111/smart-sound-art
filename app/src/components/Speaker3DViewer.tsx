@@ -1,7 +1,9 @@
 import { useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
-import { Rhino3dmLoader } from 'three/addons/loaders/3DMLoader.js';
-import modelUrl from '../assets/魔法石单音箱集合.3dm?url';
+import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
+// Import OBJ model with proper path
+// 使用public目录中的文件，确保在开发和生产环境中都能正确加载
+const modelUrl = '/assets/trytry.obj';
 
 interface Speaker3DViewerProps {
   color: string;
@@ -49,165 +51,192 @@ export const Speaker3DViewer = ({ color, isConnected, ambientEnabled, volume }: 
     const speakerGroup = new THREE.Group();
     scene.add(speakerGroup);
     
-    // 使用Rhino3dmLoader加载.3dm文件
-    const load3dmModel = () => {
+    // 使用OBJLoader加载.obj文件
+    const loadObjModel = () => {
       try {
         setLoadingError(null);
         
-        const loader = new Rhino3dmLoader();
+        const loader = new OBJLoader();
         
-        // 尝试不同的库路径配置
-        try {
-          // 首先尝试CDN路径
-          loader.setLibraryPath('https://cdn.jsdelivr.net/npm/rhino3dm@8.17.0/');
-          console.log('=== RHINO3DM LOADER INITIALIZED ===');
-          console.log('Library path set to CDN:', 'https://cdn.jsdelivr.net/npm/rhino3dm@8.17.0/');
-        } catch (error) {
-          console.error('Failed to set library path:', error);
-          setLoadingError('无法初始化Rhino3dm加载器');
-          return;
-        }
+        console.log('=== OBJ LOADER INITIALIZED ===');
+        console.log('Model file path:', modelUrl);
         
         console.log('Model URL to load:', modelUrl);
-         console.log('File exists check - attempting to load...');
+        console.log('File exists check - attempting to load...');
+        console.log('Current location:', window.location.href);
+        console.log('Full model URL:', new URL(modelUrl, window.location.href).href);
          
-         // 添加一个测试标记来识别当前显示的模型
-         console.log('=== CURRENT MODEL IDENTIFICATION ===');
-         console.log('If you see a RED cylinder, it means 3DM loading failed');
-         console.log('If you see a GRAY/DARK cylinder, it means 3DM loaded but no meshes found');
-         console.log('If you see your original model, 3DM loading succeeded');
+        // 添加一个测试标记来识别当前显示的模型
+        console.log('=== CURRENT MODEL IDENTIFICATION ===');
+        console.log('If you see a RED cylinder, it means OBJ loading failed');
+        console.log('If you see a GRAY/DARK cylinder, it means OBJ loaded but no meshes found');
+        console.log('If you see your original model, OBJ loading succeeded');
          
-         // 加载3dm文件
-         loader.load(
-           modelUrl,
-           // 加载成功回调
-           (object) => {
-             console.log('=== 3DM MODEL LOADED SUCCESSFULLY ===');
-             console.log('Model URL:', modelUrl);
-             console.log('Loaded object:', object);
-             console.log('Object type:', object.type);
-             console.log('Object children count:', object.children.length);
+        // 加载obj文件
+        loader.load(
+          modelUrl,
+          // 加载成功回调
+          (object) => {
+            console.log('=== OBJ MODEL LOADED SUCCESSFULLY ===');
+            console.log('Model URL:', modelUrl);
+            console.log('Loaded OBJ:', object);
+            console.log('Object children count:', object.children.length);
              
-             // 详细分析加载的对象结构
-             let meshCount = 0;
-             let geometryInfo = [];
+            // 详细分析加载的对象结构
+            let meshCount = 0;
+            let geometryInfo = [];
              
-             object.traverse((child) => {
-               console.log('Child found:', child.type, child.name || 'unnamed');
+            object.traverse((child) => {
+              console.log('Child found:', child.type, child.name || 'unnamed');
                
-               if (child instanceof THREE.Mesh) {
-                 meshCount++;
-                 console.log(`Mesh ${meshCount}:`, {
-                   geometry: child.geometry,
-                   material: child.material,
-                   vertices: child.geometry.attributes.position?.count || 0,
-                   faces: child.geometry.index ? child.geometry.index.count / 3 : 0
-                 });
+              if (child instanceof THREE.Mesh) {
+                meshCount++;
+                console.log(`Mesh ${meshCount}:`, {
+                  geometry: child.geometry,
+                  material: child.material,
+                  vertices: child.geometry.attributes.position?.count || 0,
+                  faces: child.geometry.index ? child.geometry.index.count / 3 : 0
+                });
                  
-                 geometryInfo.push({
-                   name: child.name || `Mesh_${meshCount}`,
-                   vertices: child.geometry.attributes.position?.count || 0,
-                   faces: child.geometry.index ? child.geometry.index.count / 3 : 0
-                 });
+                geometryInfo.push({
+                  name: child.name || `Mesh_${meshCount}`,
+                  vertices: child.geometry.attributes.position?.count || 0,
+                  faces: child.geometry.index ? child.geometry.index.count / 3 : 0
+                });
                  
-                 if (child.material) {
-                   // 更新材质颜色
-                   if (child.material instanceof THREE.MeshStandardMaterial) {
-                     child.material.color.setHex(isConnected ? 0x2a2a2a : 0x666666);
-                     child.material.metalness = 0.8;
-                     child.material.roughness = 0.2;
-                   }
-                 }
-               }
-             });
+                if (child.material) {
+                  // 更新材质颜色
+                  if (child.material instanceof THREE.MeshStandardMaterial) {
+                    child.material.color.setHex(isConnected ? 0x2a2a2a : 0x666666);
+                    child.material.metalness = 0.8;
+                    child.material.roughness = 0.2;
+                  }
+                }
+              }
+            });
              
-             console.log('Total meshes found:', meshCount);
-             console.log('Geometry info:', geometryInfo);
+            console.log('Total meshes found:', meshCount);
+            console.log('Geometry info:', geometryInfo);
              
-             if (meshCount === 0) {
-               console.warn('WARNING: No meshes found in the 3DM file!');
-               setLoadingError('3DM文件中没有找到可显示的网格对象');
+            if (meshCount === 0) {
+              console.warn('WARNING: No meshes found in the OBJ file!');
+              setLoadingError('OBJ文件中没有找到可显示的网格对象');
                
-               // 创建备用模型
-               const fallbackGeometry = new THREE.CylinderGeometry(1.2, 1.4, 3, 32);
-               const fallbackMaterial = new THREE.MeshStandardMaterial({
-                 color: 0xff0000, // 红色表示这是备用模型
-                 metalness: 0.8,
-                 roughness: 0.2
-               });
-               const fallbackMesh = new THREE.Mesh(fallbackGeometry, fallbackMaterial);
-               speakerGroup.add(fallbackMesh);
-               setModelLoaded(true);
-               return;
-             }
+              // 创建备用模型
+              const fallbackGeometry = new THREE.CylinderGeometry(1.2, 1.4, 3, 32);
+              const fallbackMaterial = new THREE.MeshStandardMaterial({
+                color: 0xff0000, // 红色表示这是备用模型
+                metalness: 0.8,
+                roughness: 0.2
+              });
+              const fallbackMesh = new THREE.Mesh(fallbackGeometry, fallbackMaterial);
+              speakerGroup.add(fallbackMesh);
+              setModelLoaded(true);
+              return;
+            }
              
-             // 调整模型大小和位置
-             const box = new THREE.Box3().setFromObject(object);
-             const center = box.getCenter(new THREE.Vector3());
-             const size = box.getSize(new THREE.Vector3());
+            // 调整模型大小和位置
+            const box = new THREE.Box3().setFromObject(object);
+            const center = box.getCenter(new THREE.Vector3());
+            const size = box.getSize(new THREE.Vector3());
              
-             console.log('Model bounding box:', {
-               center: center,
-               size: size,
-               min: box.min,
-               max: box.max
-             });
+            console.log('Model bounding box:', {
+              center: center,
+              size: size,
+              min: box.min,
+              max: box.max
+            });
              
-             // 居中模型
-             object.position.sub(center);
+            // 居中模型
+            object.position.sub(center);
              
-             // 缩放模型以适应视图
-             const maxDim = Math.max(size.x, size.y, size.z);
-             if (maxDim > 0) {
-               const scale = 3 / maxDim; // 目标大小为3个单位
-               object.scale.setScalar(scale);
-               console.log('Applied scale:', scale);
-             }
+            // 缩放模型以适应视图
+            const maxDim = Math.max(size.x, size.y, size.z);
+            if (maxDim > 0) {
+              const scale = 3 / maxDim; // 目标大小为3个单位
+              object.scale.setScalar(scale);
+              console.log('Applied scale:', scale);
+            }
              
-             // 添加到场景
-             speakerGroup.add(object);
-             setModelLoaded(true);
-             console.log('=== MODEL LOADING COMPLETE ===');
-           },
+            // 添加到场景
+            speakerGroup.add(object);
+            setModelLoaded(true);
+            console.log('=== MODEL LOADING COMPLETE ===');
+          },
           // 加载进度回调
           (progress) => {
             console.log('Loading progress:', (progress.loaded / progress.total * 100) + '% loaded');
           },
           // 加载错误回调
           (error) => {
-            console.error('=== 3DM MODEL LOADING FAILED ===');
+            console.error('=== OBJ MODEL LOADING FAILED ===');
             console.error('Error details:', error);
             console.error('Error type:', typeof error);
-            console.error('Error message:', error?.message || 'Unknown error');
+            console.error('Error message:', (error as Error)?.message || 'Unknown error');
             console.error('Model URL that failed:', modelUrl);
             
-            setLoadingError(`3D模型加载失败: ${error?.message || '未知错误'}`);
+            setLoadingError(`无法加载您的3D模型文件: ${error instanceof Error ? error.message : '文件格式不支持或文件损坏'}`);
             
-            // 创建备用模型（红色圆柱体表示加载失败）
-            console.log('Creating fallback model due to loading failure...');
-            const fallbackGeometry = new THREE.CylinderGeometry(1.2, 1.4, 3, 32);
-            const fallbackMaterial = new THREE.MeshStandardMaterial({
-              color: 0xff4444, // 红色表示这是因为加载失败的备用模型
-              metalness: 0.8,
-              roughness: 0.2
-            });
-            const fallbackMesh = new THREE.Mesh(fallbackGeometry, fallbackMaterial);
-            speakerGroup.add(fallbackMesh);
-            setModelLoaded(true);
-            
-            console.log('Fallback model created and added to scene');
+            // 使用简化模型作为备用
+            console.log('Using simplified speaker model as fallback...');
+            createSpeakerModel();
           }
         );
         
       } catch (error) {
-        console.error('Error initializing 3dm loader:', error);
-        setLoadingError(error instanceof Error ? error.message : 'Failed to initialize 3dm loader');
+        console.error('Error initializing OBJ loader:', error);
+        setLoadingError(error instanceof Error ? error.message : 'Failed to initialize OBJ loader');
         setModelLoaded(true);
       }
     };
     
-    // 开始加载模型
-    load3dmModel();
+    // 创建一个简化的音箱模型作为主要显示
+    const createSpeakerModel = () => {
+      console.log('Creating simplified speaker model...');
+      
+      // 主体 - 圆柱形音箱
+      const bodyGeometry = new THREE.CylinderGeometry(1.2, 1.4, 3, 32);
+      const bodyMaterial = new THREE.MeshStandardMaterial({
+        color: isConnected ? 0x2a2a2a : 0x666666,
+        metalness: 0.8,
+        roughness: 0.2
+      });
+      const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+      
+      // 扬声器网格
+      const speakerGeometry = new THREE.CylinderGeometry(0.8, 0.8, 0.1, 32);
+      const speakerMaterial = new THREE.MeshStandardMaterial({
+        color: 0x1a1a1a,
+        metalness: 0.9,
+        roughness: 0.1
+      });
+      const speaker = new THREE.Mesh(speakerGeometry, speakerMaterial);
+      speaker.position.z = 1.45;
+      
+      // 底座
+      const baseGeometry = new THREE.CylinderGeometry(1.6, 1.6, 0.3, 32);
+      const baseMaterial = new THREE.MeshStandardMaterial({
+        color: isConnected ? 0x1a1a1a : 0x555555,
+        metalness: 0.9,
+        roughness: 0.3
+      });
+      const base = new THREE.Mesh(baseGeometry, baseMaterial);
+      base.position.y = -1.65;
+      
+      // 组合模型
+      const speakerModel = new THREE.Group();
+      speakerModel.add(body);
+      speakerModel.add(speaker);
+      speakerModel.add(base);
+      
+      speakerGroup.add(speakerModel);
+      setModelLoaded(true);
+      console.log('Simplified speaker model created successfully');
+    };
+    
+    // 优先加载用户的原始obj模型
+    console.log('Attempting to load original OBJ model:', modelUrl);
+    loadObjModel();
     
     // 氛围灯环
     let ambientRing: THREE.Mesh | undefined;
@@ -447,12 +476,24 @@ export const Speaker3DViewer = ({ color, isConnected, ambientEnabled, volume }: 
       
       {/* 错误状态 */}
       {loadingError && (
-        <div className="absolute inset-0 flex items-center justify-center bg-red-500/10 rounded-lg">
-          <div className="text-center p-2">
-            <p className="text-xs text-red-500 mb-1">模型加载失败</p>
-            <p className="text-xs text-muted-foreground">使用备用模型</p>
+        <div className="absolute inset-0 flex items-center justify-center bg-yellow-500/10 rounded-lg backdrop-blur-sm">
+            <div className="text-center p-4 bg-white/90 shadow-lg rounded-md border border-yellow-300">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-yellow-500 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <p className="text-sm font-medium text-yellow-700 mb-2">3D模型加载失败</p>
+              <p className="text-xs text-gray-600 mb-2">正在使用简化版本显示</p>
+              <p className="text-xs text-gray-500 mb-3">可能原因: 文件格式不兼容或模型过大</p>
+              <div className="text-xs bg-yellow-50 p-2 rounded border border-yellow-200">
+                <p className="font-medium text-yellow-800">建议解决方案:</p>
+                <ul className="list-disc list-inside text-gray-600 mt-1 text-left">
+                  <li>检查GLB文件格式是否正确</li>
+                  <li>尝试简化模型减少面数</li>
+                  <li>确保模型不包含不支持的特性</li>
+                </ul>
+              </div>
+            </div>
           </div>
-        </div>
       )}
     </div>
   );
