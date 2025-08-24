@@ -106,7 +106,7 @@ export default function ModelViewer() {
 
     // 使用统一的GLTFLoader路径加载模型
     const gltfLoader = new GLTFLoader();
-    gltfLoader.load("/assets/Rebuild 1整体.glb", (gltf) => {
+    gltfLoader.load("/assets/Rebuild 1整体(1).glb", (gltf) => {
       const object = gltf.scene;
       
       console.log('=== ModelViewer GLTF模型加载成功 ===');
