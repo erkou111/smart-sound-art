@@ -5,7 +5,7 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
 
 // Import GLTF model with proper path
-const modelUrl = '/assets/jiuming.glb';
+const modelUrl = '/assets/Rebuild 1整体.glb';
 
 interface Speaker3DViewerProps {
   color: string;

@@ -137,7 +137,7 @@ const TraeModel: React.FC<TraeModelProps> = ({
         // 尝试加载GLB模型
         const loader = new GLTFLoader();
         loader.load(
-          "/assets/jiuming.glb",
+          "/assets/Rebuild 1整体.glb",
           (gltf) => {
             // 移除测试立方体
             scene.remove(cube);
