@@ -1,7 +1,17 @@
 import React, { useEffect, useRef, useState } from "react";
 import * as THREE from 'three';
 
-const TraeModel: React.FC = () => {
+interface TraeModelProps {
+  lightColor?: string;
+  ambientLightEnabled?: boolean;
+  lightMode?: string;
+}
+
+const TraeModel: React.FC<TraeModelProps> = ({ 
+  lightColor = "#4f46e5", 
+  ambientLightEnabled = true,
+  lightMode = "static"
+}) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const isDraggingRef = useRef(false);
   const previousMousePositionRef = useRef({ x: 0, y: 0 });
@@ -11,6 +21,9 @@ const TraeModel: React.FC = () => {
   const modelRef = useRef<THREE.Object3D | null>(null);
   const cameraAngleRef = useRef({ theta: 0, phi: 0 });
   const cameraDistanceRef = useRef(4);
+  const lightBallsRef = useRef<THREE.Mesh[]>([]);
+  const pointLightsRef = useRef<THREE.PointLight[]>([]);
+  const animationFrameRef = useRef<number>();
 
   useEffect(() => {
     const loadThreeJS = async () => {
@@ -52,6 +65,55 @@ const TraeModel: React.FC = () => {
         directionalLight.position.set(5, 5, 5);
         scene.add(directionalLight);
 
+        // 创建灯球
+         const createLightBalls = () => {
+           const lightBalls: THREE.Mesh[] = [];
+           const pointLights: THREE.PointLight[] = [];
+           const ballGeometry = new THREE.SphereGeometry(0.05, 16, 16);
+           
+           // 创建6个灯球，围绕模型排列
+           for (let i = 0; i < 6; i++) {
+             const angle = (i / 6) * Math.PI * 2;
+             const radius = 2;
+             
+             // 创建发光材质
+             const ballMaterial = new THREE.MeshStandardMaterial({ 
+               color: lightColor,
+               transparent: true,
+               opacity: 0.9,
+               emissive: lightColor,
+               emissiveIntensity: 0.5,
+               roughness: 0.1,
+               metalness: 0.1
+             });
+             
+             const lightBall = new THREE.Mesh(ballGeometry, ballMaterial);
+             lightBall.position.set(
+               Math.cos(angle) * radius,
+               Math.sin(i * 0.5) * 0.5, // 添加一些高度变化
+               Math.sin(angle) * radius
+             );
+             
+             // 添加点光源，增加亮度
+             const pointLight = new THREE.PointLight(lightColor, 3, 15);
+             pointLight.position.copy(lightBall.position);
+             scene.add(pointLight);
+             
+             scene.add(lightBall);
+             lightBalls.push(lightBall);
+             pointLights.push(pointLight);
+           }
+           
+           lightBallsRef.current = lightBalls;
+           pointLightsRef.current = pointLights;
+         };
+         
+
+        
+        if (ambientLightEnabled) {
+          createLightBalls();
+        }
+
         // 创建测试立方体
          const geometry = new THREE.BoxGeometry(1, 1, 1);
          const material = new THREE.MeshPhongMaterial({ color: 0x00ff00 });
@@ -76,6 +138,27 @@ const TraeModel: React.FC = () => {
             scene.remove(cube);
             
             const model = gltf.scene;
+             
+             // 设置模型材质为半透明
+             model.traverse((child) => {
+               if (child instanceof THREE.Mesh) {
+                 if (child.material) {
+                   // 如果是数组材质
+                   if (Array.isArray(child.material)) {
+                     child.material.forEach((mat) => {
+                       mat.transparent = true;
+                       mat.opacity = 0.7;
+                       mat.needsUpdate = true;
+                     });
+                   } else {
+                     // 单个材质
+                     child.material.transparent = true;
+                     child.material.opacity = 0.7;
+                     child.material.needsUpdate = true;
+                   }
+                 }
+               }
+             });
              
              // 计算模型边界框
              const box = new THREE.Box3().setFromObject(model);
@@ -190,6 +273,12 @@ const TraeModel: React.FC = () => {
            window.removeEventListener('mouseup', handleMouseUp);
            window.removeEventListener('touchend', handleMouseUp);
           window.removeEventListener('resize', handleResize);
+          
+          // 停止动画
+          if (animationFrameRef.current) {
+            cancelAnimationFrame(animationFrameRef.current);
+          }
+          
           if (container && rendererRef.current?.domElement && container.contains(rendererRef.current.domElement)) {
             container.removeChild(rendererRef.current.domElement);
           }
@@ -223,6 +312,92 @@ const TraeModel: React.FC = () => {
       clearTimeout(timer);
     };
   }, []);
+
+  // 监听颜色、氛围灯状态和灯光模式变化
+  useEffect(() => {
+    if (!sceneRef.current) return;
+    
+    const scene = sceneRef.current;
+    
+    // 停止之前的动画
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+    }
+    
+    // 控制灯球显示/隐藏
+    lightBallsRef.current.forEach(lightBall => {
+      lightBall.visible = ambientLightEnabled;
+    });
+    
+    // 控制点光源开关
+    pointLightsRef.current.forEach(pointLight => {
+      pointLight.visible = ambientLightEnabled;
+    });
+    
+    if (ambientLightEnabled) {
+      if (lightMode === 'rainbow') {
+        // 启动彩虹动画
+        const animateRainbow = () => {
+          const time = Date.now() * 0.001;
+          
+          lightBallsRef.current.forEach((lightBall, index) => {
+            // 为每个灯球计算不同的色相，形成彩虹环绕效果
+            const hue = (time * 50 + index * 60) % 360;
+            const color = new THREE.Color().setHSL(hue / 360, 0.8, 0.7);
+            
+            // 更新灯球颜色和发光效果
+            if (lightBall.material instanceof THREE.MeshStandardMaterial) {
+              lightBall.material.color.copy(color);
+              lightBall.material.emissive.copy(color);
+              lightBall.material.emissiveIntensity = 0.6;
+            }
+            
+            // 更新对应的点光源颜色，增加亮度
+            if (pointLightsRef.current[index]) {
+              pointLightsRef.current[index].color.copy(color);
+              pointLightsRef.current[index].intensity = 3;
+            }
+          });
+          
+          // 重新渲染
+          if (rendererRef.current && sceneRef.current && cameraRef.current) {
+            rendererRef.current.render(sceneRef.current, cameraRef.current);
+          }
+          
+          animationFrameRef.current = requestAnimationFrame(animateRainbow);
+        };
+        
+        animateRainbow();
+      } else {
+        // 静态模式或呼吸模式 - 使用选定的颜色
+        lightBallsRef.current.forEach((lightBall, index) => {
+          if (lightBall.material instanceof THREE.MeshStandardMaterial) {
+            lightBall.material.color.setStyle(lightColor);
+            lightBall.material.emissive.setStyle(lightColor);
+            lightBall.material.emissiveIntensity = 0.5;
+          }
+          
+          // 更新对应的点光源颜色和亮度
+          if (pointLightsRef.current[index]) {
+            pointLightsRef.current[index].color.setStyle(lightColor);
+            pointLightsRef.current[index].intensity = 3;
+          }
+        });
+        
+        // 重新渲染
+        if (rendererRef.current && cameraRef.current) {
+          rendererRef.current.render(scene, cameraRef.current);
+        }
+      }
+    }
+    
+    // 清理函数
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, [lightColor, ambientLightEnabled, lightMode]);
 
   return (
     <div

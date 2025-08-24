@@ -26,6 +26,7 @@ const Index = () => {
   const [ambientLightEnabled, setAmbientLightEnabled] = useState(true);
   const [volume, setVolume] = useState([75]);
   const [selectedColor, setSelectedColor] = useState("#4f46e5");
+  const [lightMode, setLightMode] = useState("static");
 
   return (
     <div className="min-h-screen bg-background">
@@ -57,7 +58,11 @@ const Index = () => {
         <div className="flex-1 p-4">
           <div className="h-full bg-gradient-to-br from-gray-900 via-gray-800 to-black rounded-xl shadow-2xl overflow-hidden">
             <div className="h-full w-full">
-              <TraeModel />
+              <TraeModel 
+                 lightColor={selectedColor}
+                 ambientLightEnabled={ambientLightEnabled}
+                 lightMode={lightMode}
+               />
             </div>
           </div>
         </div>
@@ -176,6 +181,8 @@ const Index = () => {
                   selectedColor={selectedColor} 
                   onColorChange={setSelectedColor}
                   ambientEnabled={ambientLightEnabled}
+                  lightMode={lightMode}
+                  onLightModeChange={setLightMode}
                 />
               </TabsContent>
               

@@ -9,6 +9,8 @@ interface ColorPickerProps {
   selectedColor: string;
   onColorChange: (color: string) => void;
   ambientEnabled: boolean;
+  lightMode?: string;
+  onLightModeChange?: (mode: string) => void;
 }
 
 // 生成颜色条的颜色值
@@ -28,9 +30,20 @@ const lightModes = [
   { id: "rainbow", name: "彩虹模式", icon: Sparkles, desc: "循环渐变色彩" }
 ];
 
-export const ColorPicker = ({ selectedColor, onColorChange, ambientEnabled }: ColorPickerProps) => {
-  const [lightMode, setLightMode] = useState("static");
+export const ColorPicker = ({ 
+  selectedColor, 
+  onColorChange, 
+  ambientEnabled, 
+  lightMode = "static", 
+  onLightModeChange 
+}: ColorPickerProps) => {
   const [customColor, setCustomColor] = useState(selectedColor);
+  
+  const handleLightModeChange = (mode: string) => {
+    if (onLightModeChange) {
+      onLightModeChange(mode);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -104,7 +117,7 @@ export const ColorPicker = ({ selectedColor, onColorChange, ambientEnabled }: Co
                     ? 'border-primary bg-primary/5' 
                     : 'border-border hover:border-primary/50'
                 }`}
-                onClick={() => setLightMode(mode.id)}
+                onClick={() => handleLightModeChange(mode.id)}
               >
                 <div className="flex items-center gap-3">
                   <div className={`p-2 rounded-lg ${lightMode === mode.id ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
