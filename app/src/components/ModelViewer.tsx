@@ -119,8 +119,23 @@ export default function ModelViewer() {
             child.material = new THREE.MeshStandardMaterial({ 
               color: 0x888888,
               metalness: 0.5,
-              roughness: 0.5
+              roughness: 0.5,
+              transparent: true,
+              opacity: 0.95 // 减小透明度
             });
+          } else {
+            // 如果已有材质，添加轻微透明属性
+            if (Array.isArray(child.material)) {
+              child.material.forEach((mat) => {
+                mat.transparent = true;
+                mat.opacity = 0.95; // 减小透明度
+                mat.needsUpdate = true;
+              });
+            } else {
+              child.material.transparent = true;
+              child.material.opacity = 0.95; // 减小透明度
+              child.material.needsUpdate = true;
+            }
           }
           
           // 启用阴影

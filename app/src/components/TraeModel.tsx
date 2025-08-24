@@ -144,7 +144,8 @@ const TraeModel: React.FC<TraeModelProps> = ({
             
             const model = gltf.scene;
              
-             // 设置模型材质为半透明
+             // 设置模型材质为轻微透明
+             // 设置模型材质为轻微透明
              model.traverse((child) => {
                if (child instanceof THREE.Mesh) {
                  if (child.material) {
@@ -152,13 +153,13 @@ const TraeModel: React.FC<TraeModelProps> = ({
                    if (Array.isArray(child.material)) {
                      child.material.forEach((mat) => {
                        mat.transparent = true;
-                       mat.opacity = 0.7;
+                       mat.opacity = 0.95; // 减小透明度
                        mat.needsUpdate = true;
                      });
                    } else {
                      // 单个材质
                      child.material.transparent = true;
-                     child.material.opacity = 0.7;
+                     child.material.opacity = 0.95; // 减小透明度
                      child.material.needsUpdate = true;
                    }
                  }
