@@ -20,6 +20,7 @@ import { ColorPicker } from "@/components/ColorPicker";
 import { SpeakerVisualization } from "@/components/SpeakerVisualization";
 import { ScreenCustomizer } from "@/components/ScreenCustomizer";
 import { AIChat } from "@/components/AIChat";
+import TraeModel from "@/components/TraeModel";
 
 const Index = () => {
   const [isConnected, setIsConnected] = useState(true);
@@ -27,6 +28,7 @@ const Index = () => {
   const [volume, setVolume] = useState([75]);
   const [selectedColor, setSelectedColor] = useState("#4f46e5");
   const [autoRotateEnabled, setAutoRotateEnabled] = useState(true);
+  const [lightMode, setLightMode] = useState("static");
 
   return (
     <div className="min-h-screen bg-background">
@@ -54,6 +56,7 @@ const Index = () => {
       </header>
 
       <main className="flex flex-col h-[calc(100vh-80px)]">
+<<<<<<< HEAD
         {/* Speaker Display Area - Takes most of the space */}
         <div className="flex-1 p-6">
           <div className="h-full bg-gradient-ambient rounded-lg p-6">
@@ -65,6 +68,17 @@ const Index = () => {
                 volume={volume[0]}
                 autoRotate={autoRotateEnabled}
               />
+=======
+        {/* 3D Model Display Area - Takes most of the space */}
+        <div className="flex-1 p-4">
+          <div className="h-full bg-gradient-to-br from-gray-900 via-gray-800 to-black rounded-xl shadow-2xl overflow-hidden">
+            <div className="h-full w-full">
+              <TraeModel 
+                 lightColor={selectedColor}
+                 ambientLightEnabled={ambientLightEnabled}
+                 lightMode={lightMode}
+               />
+>>>>>>> 315934a1f26fd73d281620a5a61c2c01e10856c6
             </div>
           </div>
         </div>
@@ -209,6 +223,8 @@ const Index = () => {
                   selectedColor={selectedColor} 
                   onColorChange={setSelectedColor}
                   ambientEnabled={ambientLightEnabled}
+                  lightMode={lightMode}
+                  onLightModeChange={setLightMode}
                 />
               </TabsContent>
               
