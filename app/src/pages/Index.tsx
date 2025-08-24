@@ -13,7 +13,8 @@ import {
   Volume2,
   Power,
   Settings,
-  Music
+  Music,
+  RotateCw
 } from "lucide-react";
 import { ColorPicker } from "@/components/ColorPicker";
 import { SpeakerVisualization } from "@/components/SpeakerVisualization";
@@ -25,6 +26,7 @@ const Index = () => {
   const [ambientLightEnabled, setAmbientLightEnabled] = useState(true);
   const [volume, setVolume] = useState([75]);
   const [selectedColor, setSelectedColor] = useState("#4f46e5");
+  const [autoRotateEnabled, setAutoRotateEnabled] = useState(true);
 
   return (
     <div className="min-h-screen bg-background">
@@ -61,6 +63,7 @@ const Index = () => {
                 isConnected={isConnected}
                 ambientEnabled={ambientLightEnabled}
                 volume={volume[0]}
+                autoRotate={autoRotateEnabled}
               />
             </div>
           </div>
@@ -100,7 +103,7 @@ const Index = () => {
                     <p className="text-sm text-muted-foreground">管理音箱的基本功能和设置</p>
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     {/* Power Control */}
                     <div className="bg-card/50 backdrop-blur-sm rounded-xl p-4 border border-border/50">
                       <div className="flex items-center justify-between mb-3">
@@ -166,6 +169,32 @@ const Index = () => {
                         </div>
                         <div className="text-xs text-muted-foreground text-center">
                           开启后显示彩色光环效果
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Auto Rotation Control */}
+                    <div className="bg-card/50 backdrop-blur-sm rounded-xl p-4 border border-border/50">
+                      <div className="flex items-center gap-2 mb-3">
+                        <RotateCw className={`w-5 h-5 transition-colors ${
+                          autoRotateEnabled ? 'text-blue-500 animate-spin' : 'text-primary'
+                        }`} style={{
+                          animationDuration: autoRotateEnabled ? '3s' : 'none'
+                        }} />
+                        <span className="font-medium">自动旋转</span>
+                      </div>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-muted-foreground">
+                            {autoRotateEnabled ? '已开启' : '已关闭'}
+                          </span>
+                          <Switch
+                            checked={autoRotateEnabled}
+                            onCheckedChange={setAutoRotateEnabled}
+                          />
+                        </div>
+                        <div className="text-xs text-muted-foreground text-center">
+                          开启后3D模型将连续旋转
                         </div>
                       </div>
                     </div>
