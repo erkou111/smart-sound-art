@@ -8,13 +8,15 @@ interface SpeakerVisualizationProps {
   isConnected: boolean;
   ambientEnabled: boolean;
   volume: number;
+  autoRotate?: boolean;
 }
 
 export const SpeakerVisualization = ({
   color,
   isConnected,
   ambientEnabled,
-  volume
+  volume,
+  autoRotate = true
 }: SpeakerVisualizationProps) => {
   const [audioWave, setAudioWave] = useState<number[]>([]);
   
@@ -61,6 +63,7 @@ export const SpeakerVisualization = ({
               isConnected={isConnected}
               ambientEnabled={ambientEnabled}
               volume={volume}
+              autoRotate={autoRotate}
             />
           </div>
 
