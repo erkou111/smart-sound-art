@@ -24,6 +24,11 @@ const TraeModel: React.FC<TraeModelProps> = ({
   const lightBallsRef = useRef<THREE.Mesh[]>([]);
   const pointLightsRef = useRef<THREE.PointLight[]>([]);
   const animationFrameRef = useRef<number>();
+  
+  // 触摸缩放相关状态
+  const isPinchingRef = useRef(false);
+  const lastPinchDistanceRef = useRef(0);
+  const touchesRef = useRef<TouchList | null>(null);
 
   useEffect(() => {
     const loadThreeJS = async () => {
@@ -189,56 +194,196 @@ const TraeModel: React.FC<TraeModelProps> = ({
           }
         );
         
+        // 计算两个触摸点之间的距离
+        const getTouchDistance = (touches: TouchList) => {
+          if (touches.length < 2) return 0;
+          const touch1 = touches[0];
+          const touch2 = touches[1];
+          const dx = touch1.clientX - touch2.clientX;
+          const dy = touch1.clientY - touch2.clientY;
+          return Math.sqrt(dx * dx + dy * dy);
+        };
+
         // 鼠标和触摸事件处理
-         const handleMouseDown = (event: MouseEvent | TouchEvent) => {
-           event.preventDefault();
-           isDraggingRef.current = true;
-           const clientX = 'touches' in event ? event.touches[0].clientX : event.clientX;
-           const clientY = 'touches' in event ? event.touches[0].clientY : event.clientY;
-           previousMousePositionRef.current = { x: clientX, y: clientY };
-         };
+        const handleMouseDown = (event: MouseEvent | TouchEvent) => {
+          event.preventDefault();
+          
+          if ('touches' in event) {
+            touchesRef.current = event.touches;
+            
+            if (event.touches.length === 2) {
+              // 双指触摸，开始缩放
+              isPinchingRef.current = true;
+              isDraggingRef.current = false;
+              lastPinchDistanceRef.current = getTouchDistance(event.touches);
+            } else if (event.touches.length === 1) {
+              // 单指触摸，开始拖拽
+              isPinchingRef.current = false;
+              isDraggingRef.current = true;
+              const touch = event.touches[0];
+              previousMousePositionRef.current = { x: touch.clientX, y: touch.clientY };
+            }
+          } else {
+            // 鼠标事件
+            isPinchingRef.current = false;
+            isDraggingRef.current = true;
+            previousMousePositionRef.current = { x: event.clientX, y: event.clientY };
+          }
+        };
 
          const handleMouseMove = (event: MouseEvent | TouchEvent) => {
-           event.preventDefault();
-           if (!isDraggingRef.current || !cameraRef.current) return;
-           
-           const clientX = 'touches' in event ? event.touches[0].clientX : event.clientX;
-           const clientY = 'touches' in event ? event.touches[0].clientY : event.clientY;
-           
-           const deltaX = clientX - previousMousePositionRef.current.x;
-           const deltaY = clientY - previousMousePositionRef.current.y;
-           
-           // 移动相机围绕模型旋转，而不是旋转模型本身
-           // 水平拖拽控制水平角度（theta）
-           cameraAngleRef.current.theta -= deltaX * 0.01;
-           // 垂直拖拽控制垂直角度（phi）
-           cameraAngleRef.current.phi += deltaY * 0.01;
-           
-           // 限制垂直角度，避免翻转
-           cameraAngleRef.current.phi = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, cameraAngleRef.current.phi));
-           
-           // 根据球坐标计算相机位置
-           const distance = cameraDistanceRef.current;
-           const phi = Math.PI / 2 + cameraAngleRef.current.phi; // 转换为标准球坐标
-           const x = distance * Math.sin(phi) * Math.cos(cameraAngleRef.current.theta);
-           const y = distance * Math.cos(phi);
-           const z = distance * Math.sin(phi) * Math.sin(cameraAngleRef.current.theta);
-           
-           cameraRef.current.position.set(x, y, z);
-           cameraRef.current.lookAt(0, 0, 0); // 始终看向模型中心
-           
-           previousMousePositionRef.current = { x: clientX, y: clientY };
-           
-           // 重新渲染
-           if (rendererRef.current && sceneRef.current && cameraRef.current) {
-             rendererRef.current.render(sceneRef.current, cameraRef.current);
-           }
-         };
+          event.preventDefault();
+          if (!cameraRef.current) return;
+          
+          if ('touches' in event) {
+            touchesRef.current = event.touches;
+            
+            if (event.touches.length === 2 && isPinchingRef.current) {
+              // 双指缩放
+              const currentDistance = getTouchDistance(event.touches);
+              if (lastPinchDistanceRef.current > 0) {
+                const scale = currentDistance / lastPinchDistanceRef.current;
+                
+                // 调整相机距离实现缩放，限制缩放范围
+                const newDistance = cameraDistanceRef.current / scale;
+                cameraDistanceRef.current = Math.max(1, Math.min(10, newDistance));
+                
+                // 更新相机位置
+                const distance = cameraDistanceRef.current;
+                const phi = Math.PI / 2 + cameraAngleRef.current.phi;
+                const x = distance * Math.sin(phi) * Math.cos(cameraAngleRef.current.theta);
+                const y = distance * Math.cos(phi);
+                const z = distance * Math.sin(phi) * Math.sin(cameraAngleRef.current.theta);
+                
+                cameraRef.current.position.set(x, y, z);
+                cameraRef.current.lookAt(0, 0, 0);
+              }
+              lastPinchDistanceRef.current = currentDistance;
+              
+              // 重新渲染
+              if (rendererRef.current && sceneRef.current && cameraRef.current) {
+                rendererRef.current.render(sceneRef.current, cameraRef.current);
+              }
+            } else if (event.touches.length === 1 && isDraggingRef.current) {
+              // 单指拖拽旋转
+              const touch = event.touches[0];
+              const deltaX = touch.clientX - previousMousePositionRef.current.x;
+              const deltaY = touch.clientY - previousMousePositionRef.current.y;
+              
+              // 移动相机围绕模型旋转
+              cameraAngleRef.current.theta -= deltaX * 0.01;
+              cameraAngleRef.current.phi += deltaY * 0.01;
+              
+              // 限制垂直角度，避免翻转
+              cameraAngleRef.current.phi = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, cameraAngleRef.current.phi));
+              
+              // 根据球坐标计算相机位置
+              const distance = cameraDistanceRef.current;
+              const phi = Math.PI / 2 + cameraAngleRef.current.phi;
+              const x = distance * Math.sin(phi) * Math.cos(cameraAngleRef.current.theta);
+              const y = distance * Math.cos(phi);
+              const z = distance * Math.sin(phi) * Math.sin(cameraAngleRef.current.theta);
+              
+              cameraRef.current.position.set(x, y, z);
+              cameraRef.current.lookAt(0, 0, 0);
+              
+              previousMousePositionRef.current = { x: touch.clientX, y: touch.clientY };
+              
+              // 重新渲染
+              if (rendererRef.current && sceneRef.current && cameraRef.current) {
+                rendererRef.current.render(sceneRef.current, cameraRef.current);
+              }
+            }
+          } else {
+            // 鼠标拖拽旋转
+            if (!isDraggingRef.current) return;
+            
+            const deltaX = event.clientX - previousMousePositionRef.current.x;
+            const deltaY = event.clientY - previousMousePositionRef.current.y;
+            
+            // 移动相机围绕模型旋转
+            cameraAngleRef.current.theta -= deltaX * 0.01;
+            cameraAngleRef.current.phi += deltaY * 0.01;
+            
+            // 限制垂直角度，避免翻转
+            cameraAngleRef.current.phi = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, cameraAngleRef.current.phi));
+            
+            // 根据球坐标计算相机位置
+            const distance = cameraDistanceRef.current;
+            const phi = Math.PI / 2 + cameraAngleRef.current.phi;
+            const x = distance * Math.sin(phi) * Math.cos(cameraAngleRef.current.theta);
+            const y = distance * Math.cos(phi);
+            const z = distance * Math.sin(phi) * Math.sin(cameraAngleRef.current.theta);
+            
+            cameraRef.current.position.set(x, y, z);
+            cameraRef.current.lookAt(0, 0, 0);
+            
+            previousMousePositionRef.current = { x: event.clientX, y: event.clientY };
+            
+            // 重新渲染
+            if (rendererRef.current && sceneRef.current && cameraRef.current) {
+              rendererRef.current.render(sceneRef.current, cameraRef.current);
+            }
+          }
+        };
 
          const handleMouseUp = (event: MouseEvent | TouchEvent) => {
-           event.preventDefault();
-           isDraggingRef.current = false;
-         };
+          event.preventDefault();
+          
+          if ('touches' in event) {
+            touchesRef.current = event.touches;
+            
+            if (event.touches.length < 2) {
+              // 如果少于两个触摸点，停止缩放
+              isPinchingRef.current = false;
+              lastPinchDistanceRef.current = 0;
+            }
+            
+            if (event.touches.length === 0) {
+              // 所有触摸点都离开，停止拖拽
+              isDraggingRef.current = false;
+            } else if (event.touches.length === 1 && isPinchingRef.current) {
+              // 从双指变为单指，切换到拖拽模式
+              isPinchingRef.current = false;
+              isDraggingRef.current = true;
+              const touch = event.touches[0];
+              previousMousePositionRef.current = { x: touch.clientX, y: touch.clientY };
+            }
+          } else {
+            // 鼠标事件
+            isDraggingRef.current = false;
+            isPinchingRef.current = false;
+          }
+        };
+
+        // 处理鼠标滚轮缩放
+        const handleWheel = (event: WheelEvent) => {
+          event.preventDefault();
+          if (!cameraRef.current) return;
+          
+          // 根据滚轮方向调整相机距离
+          const zoomSpeed = 0.1;
+          const delta = event.deltaY > 0 ? 1 + zoomSpeed : 1 - zoomSpeed;
+          
+          // 调整相机距离，限制缩放范围
+          const newDistance = cameraDistanceRef.current * delta;
+          cameraDistanceRef.current = Math.max(1, Math.min(10, newDistance));
+          
+          // 更新相机位置
+          const distance = cameraDistanceRef.current;
+          const phi = Math.PI / 2 + cameraAngleRef.current.phi;
+          const x = distance * Math.sin(phi) * Math.cos(cameraAngleRef.current.theta);
+          const y = distance * Math.cos(phi);
+          const z = distance * Math.sin(phi) * Math.sin(cameraAngleRef.current.theta);
+          
+          cameraRef.current.position.set(x, y, z);
+          cameraRef.current.lookAt(0, 0, 0);
+          
+          // 重新渲染
+          if (rendererRef.current && sceneRef.current && cameraRef.current) {
+            rendererRef.current.render(sceneRef.current, cameraRef.current);
+          }
+        };
 
         // 处理窗口大小变化
         const handleResize = () => {
@@ -256,22 +401,24 @@ const TraeModel: React.FC<TraeModelProps> = ({
         };
         
          // 添加事件监听器
-         container.addEventListener('mousedown', handleMouseDown);
-         container.addEventListener('touchstart', handleMouseDown);
-         window.addEventListener('mousemove', handleMouseMove);
-         window.addEventListener('touchmove', handleMouseMove);
-         window.addEventListener('mouseup', handleMouseUp);
-         window.addEventListener('touchend', handleMouseUp);
+        container.addEventListener('mousedown', handleMouseDown);
+        container.addEventListener('touchstart', handleMouseDown);
+        container.addEventListener('wheel', handleWheel, { passive: false });
+        window.addEventListener('mousemove', handleMouseMove);
+        window.addEventListener('touchmove', handleMouseMove, { passive: false });
+        window.addEventListener('mouseup', handleMouseUp);
+        window.addEventListener('touchend', handleMouseUp);
         window.addEventListener('resize', handleResize);
         
         // 清理函数
         return () => {
-           container.removeEventListener('mousedown', handleMouseDown);
-           container.removeEventListener('touchstart', handleMouseDown);
-           window.removeEventListener('mousemove', handleMouseMove);
-           window.removeEventListener('touchmove', handleMouseMove);
-           window.removeEventListener('mouseup', handleMouseUp);
-           window.removeEventListener('touchend', handleMouseUp);
+          container.removeEventListener('mousedown', handleMouseDown);
+          container.removeEventListener('touchstart', handleMouseDown);
+          container.removeEventListener('wheel', handleWheel);
+          window.removeEventListener('mousemove', handleMouseMove);
+          window.removeEventListener('touchmove', handleMouseMove);
+          window.removeEventListener('mouseup', handleMouseUp);
+          window.removeEventListener('touchend', handleMouseUp);
           window.removeEventListener('resize', handleResize);
           
           // 停止动画
