@@ -44,7 +44,7 @@ export const Speaker3DViewer = ({ color, isConnected, ambientEnabled, volume, au
     existingCanvases.forEach(existingCanvas => {
       const glContext = existingCanvas.getContext('webgl') || existingCanvas.getContext('experimental-webgl') || existingCanvas.getContext('webgl2');
       if (glContext) {
-        const loseContext = glContext.getExtension('WEBGL_lose_context');
+        const loseContext = (glContext as WebGLRenderingContext).getExtension('WEBGL_lose_context');
         if (loseContext) {
           loseContext.loseContext();
         }
@@ -63,8 +63,8 @@ export const Speaker3DViewer = ({ color, isConnected, ambientEnabled, volume, au
     const globalCanvases = document.querySelectorAll('canvas');
     globalCanvases.forEach(canvasElement => {
       const glContext = canvasElement.getContext('webgl') || canvasElement.getContext('experimental-webgl');
-      if (glContext && glContext.getExtension('WEBGL_lose_context')) {
-        glContext.getExtension('WEBGL_lose_context').loseContext();
+      if (glContext && (glContext as WebGLRenderingContext).getExtension('WEBGL_lose_context')) {
+(glContext as WebGLRenderingContext).getExtension('WEBGL_lose_context')?.loseContext();
       }
     });
     
@@ -295,48 +295,11 @@ export const Speaker3DViewer = ({ color, isConnected, ambientEnabled, volume, au
       ringMesh.castShadow = true;
       ringMesh.receiveShadow = true;
     
-      // 创建浮动粒子效果
-      const particleCount = 20;
-      const particleGeometry = new THREE.SphereGeometry(0.02, 8, 6);
-      const particleMaterial = new THREE.MeshStandardMaterial({
-        color: isConnected ? 0xffffff : 0xcccccc,
-        emissive: isConnected ? 0x004488 : 0x440088,
-        emissiveIntensity: 0.5,
-        transparent: true,
-        opacity: 0.8
-      });
-    
-      const particleGroup = new THREE.Group();
-      for (let i = 0; i < particleCount; i++) {
-        const particle = new THREE.Mesh(particleGeometry, particleMaterial.clone());
-        const radius = 2.5 + Math.random() * 1.5;
-        const theta = Math.random() * Math.PI * 2;
-        const phi = Math.random() * Math.PI;
-        
-        particle.position.set(
-          radius * Math.sin(phi) * Math.cos(theta),
-          radius * Math.sin(phi) * Math.sin(theta),
-          radius * Math.cos(phi)
-        );
-        
-        particle.userData = {
-          originalPosition: particle.position.clone(),
-          phase: Math.random() * Math.PI * 2,
-          speed: 0.5 + Math.random() * 0.5
-        };
-        
-        particleGroup.add(particle);
-      }
-    
       // 组装复合几何体
       const complexPolyhedron = new THREE.Group();
       complexPolyhedron.add(mainMesh);
       complexPolyhedron.add(coreMesh);
       complexPolyhedron.add(ringMesh);
-      complexPolyhedron.add(particleGroup);
-      
-      // 存储粒子组引用用于动画
-      complexPolyhedron.userData.particles = particleGroup;
       
       speakerGroup.add(complexPolyhedron);
       setModelLoaded(true);
@@ -569,39 +532,20 @@ export const Speaker3DViewer = ({ color, isConnected, ambientEnabled, volume, au
         const time = Date.now() * 0.001;
         speakerGroup.position.y = Math.sin(time * 0.5) * 0.05;
         
-        // 粒子浮动动画
+        // 内核和装饰环动画
         speakerGroup.children.forEach(child => {
-          if (child.userData.particles) {
-            child.userData.particles.children.forEach((particle: THREE.Mesh) => {
-              const userData = particle.userData;
-              if (userData.originalPosition && userData.phase !== undefined && userData.speed !== undefined) {
-                const animTime = time * userData.speed + userData.phase;
-                const offset = new THREE.Vector3(
-                  Math.sin(animTime) * 0.1,
-                  Math.cos(animTime * 1.3) * 0.08,
-                  Math.sin(animTime * 0.7) * 0.06
-                );
-                particle.position.copy(userData.originalPosition).add(offset);
-                
-                // 粒子自转
-                particle.rotation.x += 0.02;
-                particle.rotation.y += 0.015;
-              }
-            });
-            
-            // 内核自转
-            const coreChild = child.children.find((c: THREE.Object3D) => c instanceof THREE.Mesh && c.geometry instanceof THREE.OctahedronGeometry);
-            if (coreChild) {
-              coreChild.rotation.x += 0.03;
-              coreChild.rotation.y += 0.02;
-            }
-            
-            // 装饰环旋转
-            const ringChild = child.children.find((c: THREE.Object3D) => c instanceof THREE.Mesh && c.geometry instanceof THREE.TorusGeometry);
-            if (ringChild) {
-              ringChild.rotation.y += 0.01;
-              ringChild.rotation.z += 0.005;
-            }
+          // 内核自转
+          const coreChild = child.children.find((c: THREE.Object3D) => c instanceof THREE.Mesh && c.geometry instanceof THREE.OctahedronGeometry);
+          if (coreChild) {
+            coreChild.rotation.x += 0.03;
+            coreChild.rotation.y += 0.02;
+          }
+          
+          // 装饰环旋转
+          const ringChild = child.children.find((c: THREE.Object3D) => c instanceof THREE.Mesh && c.geometry instanceof THREE.TorusGeometry);
+          if (ringChild) {
+            ringChild.rotation.y += 0.01;
+            ringChild.rotation.z += 0.005;
           }
         });
       }
