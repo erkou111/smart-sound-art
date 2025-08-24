@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,7 +15,8 @@ import {
   Power,
   Settings,
   Music,
-  RotateCw
+  RotateCw,
+  Home
 } from "lucide-react";
 import { ColorPicker } from "@/components/ColorPicker";
 import { SpeakerVisualization } from "@/components/SpeakerVisualization";
@@ -23,12 +25,19 @@ import { AIChat } from "@/components/AIChat";
 import TraeModel from "@/components/TraeModel";
 
 const Index = () => {
+  const navigate = useNavigate();
   const [isConnected, setIsConnected] = useState(true);
   const [ambientLightEnabled, setAmbientLightEnabled] = useState(true);
   const [volume, setVolume] = useState([75]);
   const [selectedColor, setSelectedColor] = useState("#4f46e5");
   const [autoRotateEnabled, setAutoRotateEnabled] = useState(true);
   const [lightMode, setLightMode] = useState("static");
+
+  // 跳转到首页的函数
+  const handleNavigateToHome = () => {
+    // 跳转到manager-web的初始页面
+    window.open('http://localhost:8001/', '_blank');
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -47,6 +56,17 @@ const Index = () => {
                 <div className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-success animate-pulse' : 'bg-muted-foreground'}`} />
                 {isConnected ? "已连接" : "未连接"}
               </Badge>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button 
+                onClick={handleNavigateToHome}
+                variant="outline"
+                size="sm"
+                className="gap-1 text-xs px-3 py-1 h-7"
+              >
+                <Home className="w-3 h-3" />
+                返回首页
+              </Button>
               <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
                 <Settings className="w-3 h-3" />
               </Button>
@@ -200,6 +220,7 @@ const Index = () => {
                     </div>
                   </div>
                   
+
 
                 </div>
               </TabsContent>
