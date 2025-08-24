@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import * as THREE from "three";
-import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader";
+import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
 
 export default function ModelViewer() {
   useEffect(() => {
