@@ -1,0 +1,70 @@
+2025-08-25 03:11:23.699 [main] ERROR o.s.b.diagnostics.LoggingFailureAnalysisReporter - 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Web server failed to start. Port 8002 was already in use.
+
+Action:
+
+Identify and stop the process that's listening on port 8002 or configure this application to listen on another port.
+
+2025-08-25 03:11:23.752 [main] ERROR o.s.b.diagnostics.LoggingFailureAnalysisReporter - 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Web server failed to start. Port 8002 was already in use.
+
+Action:
+
+Identify and stop the process that's listening on port 8002 or configure this application to listen on another port.
+
+2025-08-25 03:11:24.012 [main] ERROR o.s.b.diagnostics.LoggingFailureAnalysisReporter - 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Web server failed to start. Port 8002 was already in use.
+
+Action:
+
+Identify and stop the process that's listening on port 8002 or configure this application to listen on another port.
+
+2025-08-25 03:11:24.062 [main] ERROR o.s.b.diagnostics.LoggingFailureAnalysisReporter - 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Web server failed to start. Port 8002 was already in use.
+
+Action:
+
+Identify and stop the process that's listening on port 8002 or configure this application to listen on another port.
+
+2025-08-25 03:11:24.157 [main] ERROR o.s.b.diagnostics.LoggingFailureAnalysisReporter - 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Web server failed to start. Port 8002 was already in use.
+
+Action:
+
+Identify and stop the process that's listening on port 8002 or configure this application to listen on another port.
+
