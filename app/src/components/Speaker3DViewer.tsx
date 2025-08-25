@@ -5,7 +5,7 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
 
 // Import GLTF model with proper path
-const modelUrl = '/assets/Rebuild 1整体.glb';
+const modelUrl = '/assets/Rebuild 1整体(1).glb';
 
 interface Speaker3DViewerProps {
   color: string;
@@ -179,12 +179,14 @@ export const Speaker3DViewer = ({ color, isConnected, ambientEnabled, volume, au
                 child.castShadow = true;
                 child.receiveShadow = true;
                 
-                // 回退使用 MeshStandardMaterial 以提高兼容性，避免部分 GPU 对 PhysicalMaterial 着色器编译失败
+                // 回退使用 MeshStandardMaterial 以提高兼容性
                 const standardMat = new THREE.MeshStandardMaterial({
                   color: isConnected ? 0xaaaaaa : 0x888888,
                   metalness: 0.8,
                   roughness: 0.2,
-                  envMapIntensity: 1.5
+                  envMapIntensity: 1.5,
+                  transparent: true,
+                  opacity: 0.95 // 减小透明度
                 });
                 if (child.material) {
                   (child.material as THREE.Material).dispose();
@@ -260,7 +262,9 @@ export const Speaker3DViewer = ({ color, isConnected, ambientEnabled, volume, au
         roughness: 0.2,
         envMapIntensity: 2.0,
         emissive: isConnected ? 0x001122 : 0x110022,
-        emissiveIntensity: 0.1
+        emissiveIntensity: 0.1,
+        transparent: true,
+        opacity: 0.95 // 减小透明度
       });
     
       const mainMesh = new THREE.Mesh(mainGeometry, mainMaterial);
@@ -316,7 +320,7 @@ export const Speaker3DViewer = ({ color, isConnected, ambientEnabled, volume, au
         emissive: new THREE.Color(color),
         emissiveIntensity: 0.3,
         transparent: true,
-        opacity: 0.8
+        opacity: 0.9
       });
       const ambientRing = new THREE.Mesh(ringGeometry, ringMaterial);
       ambientRing.rotation.x = Math.PI / 2;

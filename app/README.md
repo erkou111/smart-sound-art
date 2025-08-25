@@ -76,13 +76,13 @@ src/
 
 public/
 └── assets/
-    └── Rebuild 1整体.glb     # 3D音响模型文件
+    └── Rebuild 1整体(1).glb     # 3D音响模型文件
 ```
 
 ## 使用说明
 
 ### 3D模型加载
-- 应用会自动加载 `public/assets/Rebuild 1整体.glb` 中的3D音响模型
+- 应用会自动加载 `public/assets/Rebuild 1整体(1).glb` 中的3D音响模型
 - 如需更换模型，请替换该文件并确保为GLTF格式
 - 支持模型的自动缩放和居中显示
 
